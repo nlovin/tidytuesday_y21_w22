@@ -1,3 +1,8 @@
+# Load some packages
+library(tidyverse)
+library(janitor)
+library(sf)
+
 # Get the Data
 
 # Read in with tidytuesdayR package 
@@ -18,20 +23,23 @@ zip <- zip %>%
 
 
 # Explore data
-library(tidyverse)
-library(janitor)
 
 glimpse(bb)
 glimpse(zip)
 
-zip_geo <- tigris::zctas()
+# don't end up using this -- file is WAY too much (~800mb)
+#options(tigris_use_cache = TRUE)
+#zip_geo <- tigris::zctas()
 
-glimpse(zip_geo)
+# created a simplified file using qgis
+zip_shp <- read_sf("2021/week20/data/zip_shp_sm/tl_2019_us_zcta510.shp")
 
+glimpse(zip_shp)
 
-tbl <- zip_geo %>% 
-  left_join(zip, by = c("GEOID10"))
+# join shapefile to our data and keep only the lower 48 (for simple maps) -- we'll add HI and AK back later
+tbl <- zip_shp %>% 
+  inner_join(zip, by = c("GEOID10")) %>% 
+  filter(st != 'AK' & st != 'HI')
 
+# quick plot to check it
 plot(tbl$geometry)
-
-tbl
