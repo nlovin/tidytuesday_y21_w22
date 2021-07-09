@@ -21,15 +21,17 @@ zip <- zip %>%
   mutate(GEOID10 = str_pad(postal_code,5,"left" ,"0")) %>% 
   select(GEOID10, everything())
 
+# get pop data by zip
+zip_pop <- read_csv("2021/week20/data/us_zip_pop.csv") %>% 
+  mutate(GEOID10 = str_pad(zip,5,"left" ,"0")) %>% 
+  select(GEOID10, everything())
+
+zp <- zip_pop %>% select(GEOID10, type, decommissioned,primary_city,pop = irs_estimated_population_2015)
 
 # Explore data
 
 glimpse(bb)
 glimpse(zip)
-
-# don't end up using this -- file is WAY too much (~800mb)
-#options(tigris_use_cache = TRUE)
-#zip_geo <- tigris::zctas()
 
 # created a simplified file using qgis
 zip_shp <- read_sf("2021/week20/data/zip_shp_sm/tl_2019_us_zcta510.shp")
@@ -43,3 +45,19 @@ tbl <- zip_shp %>%
 
 # quick plot to check it
 plot(tbl$geometry)
+
+
+### Large ZIP File, smaller geographical area -----
+
+# don't end up using this for the entire US-- file is WAY too much (~800mb)
+options(tigris_use_cache = TRUE)
+zip_geo <- tigris::zctas()
+
+# DC, VA, MD
+dmv <- zip_geo %>% 
+  inner_join(zip %>% 
+               filter(st == 'VA' | st == 'MD' | st == 'DC'), 
+             by = c("GEOID10"))
+
+
+# add pop
